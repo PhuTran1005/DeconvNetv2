@@ -1,0 +1,8 @@
+# Created by https://www.toptal.com/developers/gitignore/api/python
+# Edit at https://www.toptal.com/developers/gitignore?templates=python
+
+### Python ###
+# Byte-compiled / optimized / DLL files
+models/__pycache__/
+__pycache__/
+deconv2_env/
