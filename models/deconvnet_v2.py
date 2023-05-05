@@ -1,18 +1,23 @@
 import torch.nn as nn
 from torchsummary import summary
 
+import sys
+sys.path.append("models/")
 from make_layers_encoder import make_layers
 
 
 class DeconvNetv2(nn.Module):
-    def __init__(self, num_classes, init_weights):
+    def __init__(self, num_classes, init_weights, is_sk):
         """Define the DeconvNetv2
 
         Args:
             num_classes (int): number of classes in dataset
             init_weights (bool): initial weight for layers
+            is_sk (bool): using skip connection or not
         """
         super(DeconvNetv2, self).__init__()
+
+        self.is_sk = is_sk
         
         layers = make_layers()
         
@@ -84,18 +89,28 @@ class DeconvNetv2(nn.Module):
         original = x
         
         x = self.conv1(x)
+        if self.is_sk:
+            x1 = x
         x, p1 = self.pool1(x)
         
         x = self.conv2(x)
+        if self.is_sk:
+            x2 = x
         x, p2 = self.pool2(x)
         
         x = self.conv3(x)
+        if self.is_sk:
+            x3 = x
         x, p3 = self.pool3(x)
         
         x = self.conv4(x)
+        if self.is_sk:
+            x4 = x
         x, p4 = self.pool4(x)
         
         x = self.conv5(x)
+        if self.is_sk:
+            x5 = x
         x, p5 = self.pool5(x)
         
         
@@ -103,18 +118,28 @@ class DeconvNetv2(nn.Module):
         x = self.deconv67(x)
         
         x = self.unpool5(x, p5)
+        if self.is_sk:
+            x += x5
         x = self.deconv5(x)
         
         x = self.unpool4(x, p4)
+        if self.is_sk:
+            x += x4
         x = self.deconv4(x)
         
         x = self.unpool3(x, p3)
+        if self.is_sk:
+            x += x3
         x = self.deconv3(x)
         
         x = self.unpool2(x, p2)
+        if self.is_sk:
+            x += x2
         x = self.deconv2(x)
         
         x = self.unpool1(x, p1)
+        if self.is_sk:
+            x += x1
         x = self.deconv1(x)
         
         return x
@@ -133,5 +158,5 @@ class DeconvNetv2(nn.Module):
 
 
 if __name__ == '__main__':
-    model = DeconvNetv2(num_classes=21, init_weights=True)
+    model = DeconvNetv2(num_classes=21, init_weights=True, is_sk=False)
     summary(model, (3, 224, 224))
