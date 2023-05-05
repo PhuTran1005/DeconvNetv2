@@ -19,6 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('--gpu-id', type=int, default=0, help='GPU ID (0, 1, 2, ...)')
     parser.add_argument('--epochs', type=int, default=200, help='Number of epochs for training')
     parser.add_argument('--is-skip-connect', type=bool, default=True, help='Number of epochs for training')
+    parser.add_argument('--is-attention', type=bool, default=True, help='Number of epochs for training')
     opt = parser.parse_args()
 
     # hyp params
@@ -54,6 +55,6 @@ if __name__ == '__main__':
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=TEST_BATCH_SIZE, shuffle=False, num_workers=1, pin_memory=True)
 
     deconvnet_v2 = train.DeconvNetv2(num_classes=num_classes, ignore_index=ignore_index, 
-                                gpu_id=gpu_id, print_freq=print_freq, epoch_print=epoch_print, is_sk=opt.is_skip_connect)
+                                gpu_id=gpu_id, print_freq=print_freq, epoch_print=epoch_print, is_sk=opt.is_skip_connect, is_attent=opt.is_attention)
 
     deconvnet_v2.train(train_loader, val_loader, save=save, epochs=epochs, lr=lr, momentum=momentum, weight_decay=weight_decay)

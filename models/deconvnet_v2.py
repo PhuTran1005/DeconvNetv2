@@ -4,20 +4,23 @@ from torchsummary import summary
 import sys
 sys.path.append("models/")
 from make_layers_encoder import make_layers
+from attention import PAM_CAM_Layer
 
 
 class DeconvNetv2(nn.Module):
-    def __init__(self, num_classes, init_weights, is_sk):
+    def __init__(self, num_classes, init_weights, is_sk, is_attent):
         """Define the DeconvNetv2
 
         Args:
             num_classes (int): number of classes in dataset
             init_weights (bool): initial weight for layers
             is_sk (bool): using skip connection or not
+            is_attent (bool): using attention or not
         """
         super(DeconvNetv2, self).__init__()
 
         self.is_sk = is_sk
+        self.is_attent = is_attent
         
         layers = make_layers()
         
@@ -49,6 +52,7 @@ class DeconvNetv2(nn.Module):
         self.deconv67 = nn.Sequential(nn.ConvTranspose2d(4096, 512, kernel_size=7, stride=1, padding=0), nn.BatchNorm2d(512), nn.ReLU())
         
         self.unpool5 = nn.MaxUnpool2d(kernel_size=2, stride=2)
+        self.attention_block_5 = PAM_CAM_Layer(512)
         # 14 x 14
         self.deconv5 = nn.Sequential(
             nn.ConvTranspose2d(512, 512, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(512), nn.ReLU(),
@@ -56,30 +60,38 @@ class DeconvNetv2(nn.Module):
             nn.ConvTranspose2d(512, 512, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(512), nn.ReLU())
         
         self.unpool4 = nn.MaxUnpool2d(kernel_size=2, stride=2)
+        self.attention_block_4 = PAM_CAM_Layer(512)
         # 28 x 28
         self.deconv4 = nn.Sequential(
             nn.ConvTranspose2d(512, 512, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(512), nn.ReLU(),
-            nn.ConvTranspose2d(512, 512, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(512), nn.ReLU(),
+            nn.ConvTranspose2d(512, 512, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(512), nn.ReLU())
+        self.deconv4_2 = nn.Sequential(
             nn.ConvTranspose2d(512, 256, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(256), nn.ReLU())
         
         self.unpool3 = nn.MaxUnpool2d(kernel_size=2, stride=2)
+        self.attention_block_3 = PAM_CAM_Layer(256)
         # 56 x 56
         self.deconv3 = nn.Sequential(
             nn.ConvTranspose2d(256, 256, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(256), nn.ReLU(),
-            nn.ConvTranspose2d(256, 256, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(256), nn.ReLU(),
+            nn.ConvTranspose2d(256, 256, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(256), nn.ReLU())
+        self.deconv3_2 = nn.Sequential(
             nn.ConvTranspose2d(256, 128, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(128), nn.ReLU())
         
         self.unpool2 = nn.MaxUnpool2d(kernel_size=2, stride=2)
+        self.attention_block_2 = PAM_CAM_Layer(128)
         # 112 x 112
         self.deconv2 = nn.Sequential(
-            nn.ConvTranspose2d(128, 128, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(128), nn.ReLU(),
+            nn.ConvTranspose2d(128, 128, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(128), nn.ReLU())
+        self.deconv2_2 = nn.Sequential(
             nn.ConvTranspose2d(128, 64, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(64), nn.ReLU())
         
         self.unpool1 = nn.MaxUnpool2d(kernel_size=2, stride=2)
+        self.attention_block_1 = PAM_CAM_Layer(64)
         # 224 x 224
         self.deconv1 = nn.Sequential(
             nn.ConvTranspose2d(64, 64, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
-            nn.ConvTranspose2d(64, 64, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(64), nn.ReLU(),
+            nn.ConvTranspose2d(64, 64, kernel_size=3, stride=1, padding=1), nn.BatchNorm2d(64), nn.ReLU())
+        self.deconv1_2 = nn.Sequential(
             nn.ConvTranspose2d(64, num_classes, kernel_size=1, stride=1, padding=0))
         
         if init_weights:
@@ -120,27 +132,55 @@ class DeconvNetv2(nn.Module):
         x = self.unpool5(x, p5)
         if self.is_sk:
             x += x5
-        x = self.deconv5(x)
+        if self.is_attent:
+            attention_5 = self.attention_block_5(x)
+            x = self.deconv5(x) + attention_5
+        else:
+            x = self.deconv5(x)
         
         x = self.unpool4(x, p4)
         if self.is_sk:
             x += x4
-        x = self.deconv4(x)
+        if self.is_attent:
+            attention_4 = self.attention_block_4(x)
+            x = self.deconv4(x) + attention_4
+            x = self.deconv4_2(x)
+        else:
+            x = self.deconv4(x)
+            x = self.deconv4_2(x)
         
         x = self.unpool3(x, p3)
         if self.is_sk:
             x += x3
-        x = self.deconv3(x)
+        if self.is_attent:
+            attention_3 = self.attention_block_3(x)
+            x = self.deconv3(x) + attention_3
+            x = self.deconv3_2(x)
+        else:
+            x = self.deconv3(x)
+            x = self.deconv3_2(x)
         
         x = self.unpool2(x, p2)
         if self.is_sk:
             x += x2
-        x = self.deconv2(x)
+        if self.is_attent:
+            attention_2 = self.attention_block_2(x)
+            x = self.deconv2(x) + attention_2
+            x = self.deconv2_2(x)
+        else:
+            x = self.deconv2(x)
+            x = self.deconv2_2(x)
         
         x = self.unpool1(x, p1)
         if self.is_sk:
             x += x1
-        x = self.deconv1(x)
+        if self.is_attent:
+            attention_1 = self.attention_block_1(x)
+            x = self.deconv1(x) + attention_1
+            x = self.deconv1_2(x)
+        else:
+            x = self.deconv1(x)
+            x = self.deconv1_2(x)
         
         return x
 
@@ -158,5 +198,5 @@ class DeconvNetv2(nn.Module):
 
 
 if __name__ == '__main__':
-    model = DeconvNetv2(num_classes=21, init_weights=True, is_sk=False)
+    model = DeconvNetv2(num_classes=21, init_weights=True, is_sk=True, is_attent=True)
     summary(model, (3, 224, 224))

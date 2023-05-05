@@ -6,7 +6,6 @@
 models/__pycache__/
 __pycache__/
 deconv2_env/
-models/attention.py
 
 ### data ###
 VOCdevkit
