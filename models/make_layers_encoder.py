@@ -1,21 +1,14 @@
+import torch
 import torch.nn as nn
-# import torchvision.models as models
+import torch.nn.functional as F
 
-import sys
-sys.path.append("models/")
-from vgg16 import VGG16
+from VGG16 import vgg16_bn
 
 
 def make_layers():
-    """make encoder layers of DeconvNet (using VGG16 architecture)
-
-    Returns:
-        list: list of conv layers
-    """
-    # vgg16_bn = models.vgg16_bn(pretrained=True)
-    vgg16_bn = VGG16(num_classes=1000)
-    features = list(vgg16_bn.features.children())
-    classifier = list(vgg16_bn.classifier.children())
+    _vgg16_bn = vgg16_bn(32, pretrained=False)
+    features = list(_vgg16_bn.features.children())
+    classifier = list(_vgg16_bn.classifier.children())
     
     conv1 = nn.Sequential(*features[:6])
     conv2 = nn.Sequential(*features[7:13])
