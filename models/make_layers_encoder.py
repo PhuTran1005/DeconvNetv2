@@ -2,7 +2,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from VGG16 import vgg16_bn
+import sys
+sys.path.append("models/")
+from vgg16 import vgg16_bn
 
 
 def make_layers():
