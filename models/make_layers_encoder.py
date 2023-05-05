@@ -1,5 +1,9 @@
 import torch.nn as nn
-import torchvision.models as models
+# import torchvision.models as models
+
+import sys
+sys.path.append("models/")
+from vgg16 import VGG16
 
 
 def make_layers():
@@ -8,7 +12,8 @@ def make_layers():
     Returns:
         list: list of conv layers
     """
-    vgg16_bn = models.vgg16_bn(pretrained=True)
+    # vgg16_bn = models.vgg16_bn(pretrained=True)
+    vgg16_bn = VGG16(num_classes=1000)
     features = list(vgg16_bn.features.children())
     classifier = list(vgg16_bn.classifier.children())
     
