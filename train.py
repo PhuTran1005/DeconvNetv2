@@ -17,18 +17,18 @@ class DeconvNetv2():
 
         torch.cuda.set_device(self.gpu)
 
-        get_loss_func = losses.get_loss(loss)
-        if get_loss_func == "CRFLoss":
+        self.get_loss_func = losses.get_loss(loss)
+        if self.get_loss_func == "CRFLoss":
             self.loss_function = losses.CRFLoss().cuda(self.gpu)
-        if get_loss_func == "cross_entropy":
+        if self.get_loss_func == "cross_entropy":
             self.loss_function = nn.CrossEntropyLoss(ignore_index=self.ignore_index).cuda(self.gpu)
-        if get_loss_func == "dice_loss":
+        if self.get_loss_func == "dice_loss":
             self.loss_function = losses.DiceLoss().cuda(self.gpu)
-        if get_loss_func == "soft_dice":
+        if self.get_loss_func == "soft_dice":
             self.loss_function = losses.SoftDiceLoss().cuda(self.gpu)
-        if get_loss_func == "focal":
+        if self.get_loss_func == "focal":
             self.loss_function = losses.FocalLoss().cuda(self.gpu)
-        if get_loss_func == "log_cosh_dice":
+        if self.get_loss_func == "log_cosh_dice":
             self.loss_function = losses.LogCoshDiceLoss().cuda(self.gpu)
 
         self.model = deconvnet_v2.DeconvNetv2(self.num_classes, init_weights, is_sk, is_attent).cuda(self.gpu)
@@ -50,9 +50,9 @@ class DeconvNetv2():
                 y = y.view(n, h, w).type(torch.LongTensor)
                 X, y = X.cuda(self.gpu, non_blocking=True), y.cuda(self.gpu, non_blocking=True)
                 output = self.model(X)
-                if get_loss_func == "CRFLoss":
+                if self.get_loss_func == "CRFLoss":
                     loss = self.loss_function(output, y, X)
-                if get_loss_func in ["cross_entropy", "dice_loss", "soft_dice", "focal", "log_cosh_dice"]:
+                if self.get_loss_func in ["cross_entropy", "dice_loss", "soft_dice", "focal", "log_cosh_dice"]:
                     loss = self.loss_function(output, y)
 
                 optimizer.zero_grad()
