@@ -8,7 +8,7 @@ import torch.optim as optim
 
 
 class DeconvNetv2():
-    def __init__(self, loss, num_classes=21, init_weights=True, ignore_index=-1, gpu_id=0, print_freq=10, epoch_print=10, is_sk=True):
+    def __init__(self, loss, num_classes=21, init_weights=True, ignore_index=-1, gpu_id=0, print_freq=10, epoch_print=10, is_sk=True, is_attent=True):
         self.num_classes = num_classes
         self.ignore_index = ignore_index
         self.gpu = gpu_id
@@ -31,7 +31,7 @@ class DeconvNetv2():
         if get_loss_func == "log_cosh_dice":
             self.loss_function = losses.LogCoshDiceLoss().cuda(self.gpu)
 
-        self.model = deconvnet_v2.DeconvNetv2(self.num_classes, init_weights, is_sk).cuda(self.gpu)
+        self.model = deconvnet_v2.DeconvNetv2(self.num_classes, init_weights, is_sk, is_attent).cuda(self.gpu)
 
         self.eps = 1e-10
         self.best_mIoU = 0.
