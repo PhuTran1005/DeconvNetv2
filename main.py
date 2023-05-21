@@ -1,5 +1,6 @@
 import train
 from data import augmentations
+from data import pascal_augmented
 
 import torch
 import torchvision
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--epochs', type=int, default=200, help='Number of epochs for training')
     parser.add_argument('--is-skip-connect', type=bool, default=True, help='Number of epochs for training')
     parser.add_argument('--is-attention', type=bool, default=True, help='Number of epochs for training')
-    parser.add_argument('--loss-func', type=string, default='dice_loss', help='Number of epochs for training')
+    parser.add_argument('--loss-func', type=str, default='dice_loss', help='Number of epochs for training')
     opt = parser.parse_args()
 
     # hyp params
@@ -49,10 +50,10 @@ if __name__ == '__main__':
                                             augmentations.Resize((256, 256)), 
                                             augmentations.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
-    train_dataset = torchvision.datasets.VOCSegmentation(root='./', year='2012', image_set='train', download=True, transforms=train_tf)
+    train_dataset = pascal_augmented.VOCSegmentation(images_train, targets_train, transforms=train_tf)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=TRAIN_BATCH_SIZE, shuffle=True, num_workers=1, pin_memory=True)
 
-    val_dataset = torchvision.datasets.VOCSegmentation(root='./', year='2012', image_set='val', download=True, transforms=val_tf)
+    val_dataset = pascal_augmented.VOCSegmentation(images_val, targets_val, transforms=val_tf)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=TEST_BATCH_SIZE, shuffle=False, num_workers=1, pin_memory=True)
 
     deconvnet_v2 = train.DeconvNetv2(opt.loss_func, num_classes=num_classes, ignore_index=ignore_index, 

@@ -5,6 +5,7 @@ from utils import losses
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from pytorch_toolbelt import losses as L
 
 
 class DeconvNetv2():
@@ -23,11 +24,11 @@ class DeconvNetv2():
         if self.get_loss_func == "cross_entropy":
             self.loss_function = nn.CrossEntropyLoss(ignore_index=self.ignore_index).cuda(self.gpu)
         if self.get_loss_func == "dice_loss":
-            self.loss_function = losses.DiceLoss().cuda(self.gpu)
+            self.loss_function = L.DiceLoss(ignore_index=255)
         if self.get_loss_func == "soft_dice":
             self.loss_function = losses.SoftDiceLoss().cuda(self.gpu)
         if self.get_loss_func == "focal":
-            self.loss_function = losses.FocalLoss().cuda(self.gpu)
+            self.loss_function = L.FocalLoss(ignore_index=255)
         if self.get_loss_func == "log_cosh_dice":
             self.loss_function = losses.LogCoshDiceLoss().cuda(self.gpu)
 
@@ -96,7 +97,7 @@ class DeconvNetv2():
                 loss = self.loss_function(output, y)
                 losses.append(loss.item())
 
-                tp, fp, fn = metrics.mIoU(output, y, self.num_classes, self.gpu)
+                tp, fp, fn = metrics.mIoU(output, y, self.num_classes, self.gpu, ignore_index=255)
                 tps += tp
                 fps += fp
                 fns += fn

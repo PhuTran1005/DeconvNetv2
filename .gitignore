@@ -10,3 +10,8 @@ deconv2_env/
 ### data ###
 VOCdevkit
 VOCtrainval_11-May-2012.tar
+data/__MACOSX
+data/__pycache__
+data/SegmentationClassAug
+data/tools
+data/VOCdevkit
