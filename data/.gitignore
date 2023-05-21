@@ -2,3 +2,8 @@
 # Edit at https://www.toptal.com/developers/gitignore?templates=python
 
 ### Python ###cs
+__MACOSX
+__pycache__
+SegmentationClassAug
+tools
+VOCdevkit
